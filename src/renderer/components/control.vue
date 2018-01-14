@@ -116,10 +116,6 @@
         this.button = btn
         this.current = this.config[btn]
       },
-      saveButton () {
-        this.config[this.button] = this.current
-        this.sendConfigToMain()
-      },
       sendConfigToMain () {
         this.$electron.ipcRenderer.send('setConfig', this.config)
         console.log('Sending config to main')
