@@ -1,34 +1,35 @@
 <template>
   <div id="controlPage">
     <div id="streamdeck" class="row">
-      <div class="streamdeckLogo">Streamdeck</div>
+      <div class="streamdeckLogo">STREAM DECK</div>
       <div class="deckButtonRow">
-        <deckButton id=4 v-on:selected="buttonSelected(4);" :config="config"></deckButton>
-        <deckButton id=3 v-on:selected="buttonSelected(3);" :config="config"></deckButton>
-        <deckButton id=2 v-on:selected="buttonSelected(2);" :config="config"></deckButton>
-        <deckButton id=1 v-on:selected="buttonSelected(1);" :config="config"></deckButton>
-        <deckButton id=0 v-on:selected="buttonSelected(0);" :config="config"></deckButton>
+        <deckButton id=4 v-on:selected="buttonSelected(4);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=3 v-on:selected="buttonSelected(3);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=2 v-on:selected="buttonSelected(2);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=1 v-on:selected="buttonSelected(1);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=0 v-on:selected="buttonSelected(0);" :config="config" :buttSelected="button"></deckButton>
       </div>
       <div class="deckButtonRow">
-        <deckButton id=9 v-on:selected="buttonSelected(9);" :config="config"></deckButton>
-        <deckButton id=8 v-on:selected="buttonSelected(8);" :config="config"></deckButton>
-        <deckButton id=7 v-on:selected="buttonSelected(7);" :config="config"></deckButton>
-        <deckButton id=6 v-on:selected="buttonSelected(6);" :config="config"></deckButton>
-        <deckButton id=5 v-on:selected="buttonSelected(5);" :config="config"></deckButton>
+        <deckButton id=9 v-on:selected="buttonSelected(9);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=8 v-on:selected="buttonSelected(8);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=7 v-on:selected="buttonSelected(7);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=6 v-on:selected="buttonSelected(6);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=5 v-on:selected="buttonSelected(5);" :config="config" :buttSelected="button"></deckButton>
       </div>
       <div class="deckButtonRow">
-        <deckButton id=14 v-on:selected="buttonSelected(14);" :config="config"></deckButton>
-        <deckButton id=13 v-on:selected="buttonSelected(13);" :config="config"></deckButton>
-        <deckButton id=12 v-on:selected="buttonSelected(12);" :config="config"></deckButton>
-        <deckButton id=11 v-on:selected="buttonSelected(11);" :config="config"></deckButton>
-        <deckButton id=10 v-on:selected="buttonSelected(10);" :config="config"></deckButton>
+        <deckButton id=14 v-on:selected="buttonSelected(14);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=13 v-on:selected="buttonSelected(13);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=12 v-on:selected="buttonSelected(12);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=11 v-on:selected="buttonSelected(11);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=10 v-on:selected="buttonSelected(10);" :config="config" :buttSelected="button"></deckButton>
       </div>
   </div>
   <hr />
-  <div class="row">
-    <div id="buttonControl" class="from-group">
-      <h4>Configuration for button: {{ button }}</h4>
-      <hr />
+  <div class="panel panel-primary form-group">
+
+    <div class="panel-heading">Configuration for button: {{ button }}</div>
+    <div class="panel-body">
+
       <label>Select Button Mode:</label>
       <select v-model="current.mode">
         <option>OSC</option>
@@ -50,7 +51,7 @@
           <span class="input-group-addon" id="basic-addon1">IP Address</span>
           <input type="text" class="form-control" v-model="current.osc.ip">
         </div>
-        <div class="input-group" style="width: 210px; margin-top: 10px; margin-left: 5px;">
+        <div class="input-group" style="width: 200px; margin-top: 10px; margin-left: 5px;">
           <span class="input-group-addon" id="basic-addon1">Port</span>
           <input type="text" class="form-control" v-model="current.osc.port">
         </div>
@@ -67,6 +68,8 @@
       <button class="btn btn-primary" v-on:click="setFillColor(255, 0, 0);">Red</button>
       <button class="btn btn-primary" v-on:click="setFillColor(0, 255, 0);">Green</button>
       <button class="btn btn-primary" v-on:click="setFillColor(0, 0, 255);">Blue</button>
+
+      <button class="btn btn-primary" v-on:click="pickImage();">Pick Image</button>
 
     </div>
   </div>
@@ -112,19 +115,22 @@
     },
     methods: {
       buttonSelected (btn) {
-        console.log('Selected button: ' + btn)
+        // console.log('Selected button: ' + btn)
         this.button = btn
         this.current = this.config[btn]
       },
       sendConfigToMain () {
         this.$electron.ipcRenderer.send('setConfig', this.config)
-        console.log('Sending config to main')
+        // console.log('Sending config to main')
       },
       clearImage () {
         this.$electron.ipcRenderer.send('clearImage', this.button)
       },
       setFillColor (r, g, b) {
         this.$electron.ipcRenderer.send('setFillColor', {'button': this.button, 'r': r, 'g': g, 'b': b})
+      },
+      pickImage () {
+        this.$electron.ipcRenderer.send('pickImage', {button: this.button})
       }
     },
     created () {
@@ -143,8 +149,9 @@
 
 <style>
 
-  body { font-family: 'Verdana', sans-serif; }
-
+body {
+  font-family: 'Verdana', sans-serif;
+}
 
 #streamdeck {
   border: 5px solid black;
@@ -155,14 +162,6 @@
   margin: auto;
   margin-top: 20px;
   background: -webkit-radial-gradient(center, ellipse cover, rgba(75,75,75,1) 0%,rgba(25,25,25,1) 100%);
-}
-
-#buttonControl {
-  padding: 15px;
-  width: 660px;
-  margin: auto;
-  border: 2px solid black;
-  border-radius: 20px;
 }
 
 .deckButtonRow {

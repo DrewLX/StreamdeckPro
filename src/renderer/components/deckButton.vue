@@ -1,5 +1,5 @@
 <template>
-  <div class="deckButton" :class="{pressed: pressed}">
+  <div class="deckButton" :class="{pressed: pressed, selected: selected}">
     <div class="deckButtonLabel" v-on:click="selectButton(id);">{{ id }}</div>
   </div>
 </template>
@@ -11,6 +11,10 @@
          type: String,
          default: '?'
        },
+       buttSelected: {
+         type: Number,
+         default: 0
+       },
        config: {
          type: Array
        }
@@ -18,6 +22,13 @@
      computed: {
        pressed: function () {
          if (this.config[this.id].pressed) {
+           return true
+         } else {
+           return false
+         }
+       },
+       selected: function () {
+         if (this.buttSelected === parseInt(this.id)) {
            return true
          } else {
            return false
@@ -63,6 +74,9 @@
   .pressed {
     border: 2px solid white;
     color: white;
+  }
+  .selected {
+    border: 2px solid #337ab7;
   }
 
 </style>

@@ -1,7 +1,8 @@
 'use strict'
 
 import { app, BrowserWindow, ipcMain } from 'electron'
-
+const {dialog} = require('electron')
+const path = require('path')
 const Store = require('electron-store')
 const store = new Store()
 
@@ -19,7 +20,7 @@ myStreamDeck.on('down', keyIndex => {
     client.send(key.osc.msg, key.osc.args, function () {
       client.kill()
     })
-    console.log('Send OSC Message: ' + key.osc.msg + ' - to: ' + key.osc.ip + ' - on port: ' + key.osc.port + ' - with args: ' + key.osc.args)
+    console.log('Sent OSC Message: ' + key.osc.msg + ' - to: ' + key.osc.ip + ' - on port: ' + key.osc.port + ' - with args: ' + key.osc.args)
   }
 
   config[keyIndex]['pressed'] = true
@@ -56,7 +57,7 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     height: 800,
     useContentSize: true,
-    width: 740,
+    width: 680,
     resizable: false
   })
 
@@ -66,21 +67,23 @@ function createWindow () {
     mainWindow = null
   })
 
-  for (var i = 0; i < 15; i++) {
-    config[i] = {
-      pressed: false,
-      mode: 'OSC',
-      osc: {
-        ip: '127.0.0.1',
-        port: '53000',
-        args: '',
-        msg: '/cue/' + i + '/start'
+  if (store.has('config')) {
+    config = store.get('config')
+    console.log('Config loaded from store')
+  } else {
+    for (var i = 0; i < 15; i++) {
+      config[i] = {
+        pressed: false,
+        mode: 'OSC',
+        osc: {
+          ip: '127.0.0.1',
+          port: '53000',
+          args: '',
+          msg: '/cue/' + i + '/start'
+        }
       }
     }
   }
-
-  config = store.get('config')
-  console.log('Config loaded from store')
 
   sendConfigToWebview()
 }
@@ -103,25 +106,39 @@ app.on('activate', () => {
 ipcMain.on('setConfig', (event, arg) => {
   config = arg
   store.set('config', config)
-  // sendConfigToWebview()
-  console.log('config updated and stored')
+  // console.log('config updated and stored')
 })
 ipcMain.on('getConfig', (event, arg) => {
   sendConfigToWebview()
-  console.log('Initial config sent to webview')
+  // console.log('Initial config sent to webview')
 })
 
 ipcMain.on('clearImage', (event, arg) => {
   myStreamDeck.clearKey(arg)
 })
 ipcMain.on('setFillColor', (event, arg) => {
-  console.log('Set fill color for button: ' + arg['button'])
+  // console.log('Set fill color for button: ' + arg['button'])
   myStreamDeck.fillColor(arg['button'], arg['r'], arg['g'], arg['b'])
+})
+ipcMain.on('pickImage', (event, arg) => {
+  var file = dialog.showOpenDialog({title: 'Select Image', properties: ['openFile'], filters: [{name: 'Images', extensions: ['jpg', 'png']}]})
+  console.log('File picked for button ' + arg.button + ' - ' + file)
+  myStreamDeck.fillImageFromFile(arg.button, String(file)).then(() => {
+    console.log('Successfully wrote a logo')
+  }).catch(err => {
+    console.error(err)
+  })
+  // myStreamDeck.fillColor(arg['button'], arg['r'], arg['g'], arg['b'])
 })
 
 function sendConfigToWebview () {
   mainWindow.webContents.send('updateConfig', config)
 }
+
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason)
+  // application specific logging, throwing an error, or other logic here
+})
 /**
  * Auto Updater
  *
