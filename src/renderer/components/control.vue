@@ -122,7 +122,7 @@
       },
       sendConfigToMain () {
         this.$electron.ipcRenderer.send('setConfig', this.config)
-        // console.log('Sending config to main')
+        console.log('Sending config to main')
       },
       clearImage () {
         this.$electron.ipcRenderer.send('clearImage', this.button)
@@ -137,7 +137,9 @@
         this.current = arg[this.button]
         // console.log('Config updated from main js')
       })
+
       ipcRenderer.send('getConfig', {})
+      console.log('Request for initial config made')
     }
 
   }

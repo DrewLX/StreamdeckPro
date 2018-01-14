@@ -1,7 +1,9 @@
 'use strict'
 
 import { app, BrowserWindow, ipcMain } from 'electron'
-// const path = require('path')
+
+const Store = require('electron-store')
+const store = new Store()
 
 const StreamDeck = require('elgato-stream-deck')
 var osc = require('node-osc')
@@ -32,8 +34,8 @@ myStreamDeck.on('up', keyIndex => {
 myStreamDeck.on('error', error => {
   console.error(error)
 })
-var config = []
 
+var config = []
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -76,6 +78,10 @@ function createWindow () {
       }
     }
   }
+
+  config = store.get('config')
+  console.log('Config loaded from store')
+
   sendConfigToWebview()
 }
 
@@ -96,11 +102,13 @@ app.on('activate', () => {
 
 ipcMain.on('setConfig', (event, arg) => {
   config = arg
+  store.set('config', config)
   // sendConfigToWebview()
-  // console.log('config updated')
+  console.log('config updated and stored')
 })
 ipcMain.on('getConfig', (event, arg) => {
   sendConfigToWebview()
+  console.log('Initial config sent to webview')
 })
 
 ipcMain.on('clearImage', (event, arg) => {
