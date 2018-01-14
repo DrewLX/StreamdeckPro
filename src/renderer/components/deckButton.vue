@@ -17,7 +17,7 @@
      },
      computed: {
        pressed: function () {
-         if (this.config[this.id]['pressed']) {
+         if (this.config[this.id].pressed) {
            return true
          } else {
            return false

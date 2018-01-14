@@ -11,12 +11,13 @@ myStreamDeck.setBrightness(100)
 
 myStreamDeck.on('down', keyIndex => {
   var key = config[keyIndex]
-  if (key['mode'] === 'OSC') {
-    var client = new osc.Client(key['ip'], key['port'])
-    client.send(key['osc'], key['args'], function () {
+
+  if (key.mode === 'OSC') {
+    var client = new osc.Client(key.osc.ip, key.osc.port)
+    client.send(key.osc.msg, key.osc.args, function () {
       client.kill()
     })
-    console.log('Send OSC Message: ' + key['osc'] + ' - to: ' + key['ip'])
+    console.log('Send OSC Message: ' + key.osc.msg + ' - to: ' + key.osc.ip + ' - on port: ' + key.osc.port + ' - with args: ' + key.osc.args)
   }
 
   config[keyIndex]['pressed'] = true
@@ -65,12 +66,14 @@ function createWindow () {
 
   for (var i = 0; i < 15; i++) {
     config[i] = {
-      'mode': 'OSC',
-      'osc': '/cue/' + i + '/start',
-      'ip': '127.0.0.1',
-      'port': '53000',
-      'args': '',
-      'pressed': false
+      pressed: false,
+      mode: 'OSC',
+      osc: {
+        ip: '127.0.0.1',
+        port: '53000',
+        args: '',
+        msg: '/cue/' + i + '/start'
+      }
     }
   }
   sendConfigToWebview()
@@ -93,7 +96,7 @@ app.on('activate', () => {
 
 ipcMain.on('setConfig', (event, arg) => {
   config = arg
-  sendConfigToWebview()
+  // sendConfigToWebview()
   // console.log('config updated')
 })
 ipcMain.on('getConfig', (event, arg) => {

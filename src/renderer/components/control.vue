@@ -27,40 +27,41 @@
   <hr />
   <div class="row">
     <div id="buttonControl" class="from-group">
-      Configuration for button: {{ button }}
+      <h4>Configuration for button: {{ button }}</h4>
       <hr />
       <label>Select Button Mode:</label>
-      <select v-model="curMode">
+      <select v-model="current.mode">
         <option>OSC</option>
         <option>MIDI</option>
       </select>
 
       <br /><br />
 
-      <div v-if="curMode == 'OSC'">
+      <div v-if="this.current.mode == 'OSC'">
         <div class="input-group">
           <span class="input-group-addon" id="basic-addon1">OSC Command</span>
-          <input type="text" class="form-control" v-model="curOSC">
+          <input type="text" class="form-control" v-model="current.osc.msg">
         </div>
         <div class="input-group" style="margin-top: 10px;">
           <span class="input-group-addon" id="basic-addon1">Arguments</span>
-          <input type="text" class="form-control" v-model="curOSCArgs">
+          <input type="text" class="form-control" v-model="current.osc.args">
         </div>
         <div class="input-group" style="width: 400px; margin-top: 10px; float: left; margin-right: 15px;">
           <span class="input-group-addon" id="basic-addon1">IP Address</span>
-          <input type="text" class="form-control" v-model="curIp">
+          <input type="text" class="form-control" v-model="current.osc.ip">
         </div>
         <div class="input-group" style="width: 210px; margin-top: 10px; margin-left: 5px;">
           <span class="input-group-addon" id="basic-addon1">Port</span>
-          <input type="text" class="form-control" v-model="curPort">
+          <input type="text" class="form-control" v-model="current.osc.port">
         </div>
       </div>
 
-      <div v-if="curMode == 'MIDI'">
+      <div v-if="current.mode == 'MIDI'">
         Like, so totally not implemented yet.
+        {{ config }}
       </div>
 
-      <hr />
+      <br />
 
       <button class="btn btn-primary" v-on:click="clearImage();">Clear Image</button>
       <button class="btn btn-primary" v-on:click="setFillColor(255, 0, 0);">Red</button>
@@ -76,14 +77,17 @@
   import deckButton from './deckButton'
   const {ipcRenderer} = require('electron')
 
-  var conf = {}
+  var conf = [{}]
   for (var i = 0; i < 15; i++) {
     conf[i] = {
-      'osc': '/cue/' + i + '/start',
-      'ip': '127.0.0.1',
-      'port': '53000',
-      'args': '',
-      'pressed': false
+      pressed: false,
+      mode: 'OSC',
+      osc: {
+        ip: '127.0.0.1',
+        port: '53000',
+        args: '',
+        msg: '/cue/' + i + '/start'
+      }
     }
   }
 
@@ -93,57 +97,32 @@
     data: function () {
       return {
         button: 0,
-        curOSC: '',
-        curPort: '',
-        curIp: '',
-        curOSCArgs: '',
-        curMode: 'OSC',
+        current: conf[0],
         config: conf
       }
     },
     watch: {
-      curOSC: function (val) {
-        this.config[this.button]['osc'] = val
-        this.sendConfigToMain()
-      },
-      curOSCArgs: function (val) {
-        this.config[this.button]['args'] = val
-        this.sendConfigToMain()
-      },
-      curPort: function (val) {
-        this.config[this.button]['port'] = val
-        this.sendConfigToMain()
-      },
-      curIp: function (val) {
-        this.config[this.button]['ip'] = val
-        this.sendConfigToMain()
-      },
-      curMode: function (val) {
-        this.config[this.button]['mode'] = val
-        this.sendConfigToMain()
-      },
-      config: function (val) {
-        this.curOSC = val[this.button]['osc']
-        this.curIp = val[this.button]['ip']
-        this.curPort = val[this.button]['port']
-        this.curMode = val[this.button]['mode']
+      current: {
+        handler: function (val) {
+          this.config[this.button] = val
+          this.sendConfigToMain()
+        },
+        deep: true
       }
     },
     methods: {
       buttonSelected (btn) {
         console.log('Selected button: ' + btn)
         this.button = btn
-        this.curOSC = this.config[btn]['osc']
-        this.curIp = this.config[btn]['ip']
-        this.curPort = this.config[btn]['port']
+        this.current = this.config[btn]
+      },
+      saveButton () {
+        this.config[this.button] = this.current
+        this.sendConfigToMain()
       },
       sendConfigToMain () {
         this.$electron.ipcRenderer.send('setConfig', this.config)
-      },
-      setMode (val) {
-        this.curMode = val
-        this.config[this.button]['mode'] = val
-        this.sendConfigToMain()
+        // console.log('Sending config to main')
       },
       clearImage () {
         this.$electron.ipcRenderer.send('clearImage', this.button)
@@ -155,6 +134,8 @@
     created () {
       ipcRenderer.on('updateConfig', (event, arg) => {
         this.config = arg
+        this.current = arg[this.button]
+        // console.log('Config updated from main js')
       })
       ipcRenderer.send('getConfig', {})
     }
