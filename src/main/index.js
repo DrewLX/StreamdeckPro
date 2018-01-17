@@ -2,17 +2,22 @@
 
 import { app, BrowserWindow, ipcMain } from 'electron'
 const {dialog} = require('electron')
-const path = require('path')
+
 const Store = require('electron-store')
 const store = new Store()
+store.delete('config')
 
-const StreamDeck = require('elgato-stream-deck')
+const streamDeckApi = require('stream-deck-api')
+var streamDeck = streamDeckApi.getStreamDeck()
+
 var osc = require('node-osc')
 
-const myStreamDeck = new StreamDeck()
-myStreamDeck.setBrightness(100)
+streamDeck.setBrightness(100)
 
-myStreamDeck.on('down', keyIndex => {
+streamDeck.on('down', (keyIndex) => {
+  config[keyIndex]['pressed'] = true
+  sendConfigToWebview()
+
   var key = config[keyIndex]
 
   if (key.mode === 'OSC') {
@@ -22,18 +27,11 @@ myStreamDeck.on('down', keyIndex => {
     })
     console.log('Sent OSC Message: ' + key.osc.msg + ' - to: ' + key.osc.ip + ' - on port: ' + key.osc.port + ' - with args: ' + key.osc.args)
   }
-
-  config[keyIndex]['pressed'] = true
-  sendConfigToWebview()
 })
 
-myStreamDeck.on('up', keyIndex => {
-  config[keyIndex]['pressed'] = false
+streamDeck.on('up', (keyIndex) => {
+  config[keyIndex].pressed = false
   sendConfigToWebview()
-})
-
-myStreamDeck.on('error', error => {
-  console.error(error)
 })
 
 var config = []
@@ -51,9 +49,6 @@ const winURL = process.env.NODE_ENV === 'development'
   : `file://${__dirname}/index.html`
 
 function createWindow () {
-  /**
-   * Initial window options
-   */
   mainWindow = new BrowserWindow({
     height: 800,
     useContentSize: true,
@@ -71,7 +66,7 @@ function createWindow () {
     config = store.get('config')
     console.log('Config loaded from store')
   } else {
-    for (var i = 0; i < 15; i++) {
+    for (var i = 0; i < 16; i++) {
       config[i] = {
         pressed: false,
         mode: 'OSC',
@@ -113,22 +108,17 @@ ipcMain.on('getConfig', (event, arg) => {
   // console.log('Initial config sent to webview')
 })
 
-ipcMain.on('clearImage', (event, arg) => {
-  myStreamDeck.clearKey(arg)
-})
 ipcMain.on('setFillColor', (event, arg) => {
+  console.log(arg)
   // console.log('Set fill color for button: ' + arg['button'])
-  myStreamDeck.fillColor(arg['button'], arg['r'], arg['g'], arg['b'])
+  streamDeck.drawColor(parseInt(arg.color), parseInt(arg.button))
 })
+
 ipcMain.on('pickImage', (event, arg) => {
   var file = dialog.showOpenDialog({title: 'Select Image', properties: ['openFile'], filters: [{name: 'Images', extensions: ['jpg', 'png']}]})
   console.log('File picked for button ' + arg.button + ' - ' + file)
-  myStreamDeck.fillImageFromFile(arg.button, String(file)).then(() => {
-    console.log('Successfully wrote a logo')
-  }).catch(err => {
-    console.error(err)
-  })
-  // myStreamDeck.fillColor(arg['button'], arg['r'], arg['g'], arg['b'])
+
+  streamDeck.drawImageFileWithText(String(file), parseInt(arg.button), 'Hello')
 })
 
 function sendConfigToWebview () {
@@ -136,25 +126,13 @@ function sendConfigToWebview () {
 }
 
 process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason)
+  console.log('EEK! Unhandled Rejection at: Promise', p, 'reason:', reason)
   // application specific logging, throwing an error, or other logic here
 })
-/**
- * Auto Updater
- *
- * Uncomment the following code below and install `electron-updater` to
- * support auto updating. Code Signing with a valid certificate is required.
- * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-electron-builder.html#auto-updating
- */
 
-/*
-import { autoUpdater } from 'electron-updater'
-
-autoUpdater.on('update-downloaded', () => {
-  autoUpdater.quitAndInstall()
+// --
+// OSC Server
+var oscServer = new osc.Server(4242, '0.0.0.0')
+oscServer.on('message', function (msg, rinfo) {
+  console.log('OSC message:' + msg)
 })
-
-app.on('ready', () => {
-  if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()
-})
- */

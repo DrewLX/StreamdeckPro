@@ -3,25 +3,25 @@
     <div id="streamdeck" class="row">
       <div class="streamdeckLogo">STREAM DECK</div>
       <div class="deckButtonRow">
-        <deckButton id=4 v-on:selected="buttonSelected(4);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=3 v-on:selected="buttonSelected(3);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=2 v-on:selected="buttonSelected(2);" :config="config" :buttSelected="button"></deckButton>
         <deckButton id=1 v-on:selected="buttonSelected(1);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=0 v-on:selected="buttonSelected(0);" :config="config" :buttSelected="button"></deckButton>
-      </div>
-      <div class="deckButtonRow">
-        <deckButton id=9 v-on:selected="buttonSelected(9);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=8 v-on:selected="buttonSelected(8);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=7 v-on:selected="buttonSelected(7);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=6 v-on:selected="buttonSelected(6);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=2 v-on:selected="buttonSelected(2);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=3 v-on:selected="buttonSelected(3);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=4 v-on:selected="buttonSelected(4);" :config="config" :buttSelected="button"></deckButton>
         <deckButton id=5 v-on:selected="buttonSelected(5);" :config="config" :buttSelected="button"></deckButton>
       </div>
       <div class="deckButtonRow">
-        <deckButton id=14 v-on:selected="buttonSelected(14);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=13 v-on:selected="buttonSelected(13);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=12 v-on:selected="buttonSelected(12);" :config="config" :buttSelected="button"></deckButton>
-        <deckButton id=11 v-on:selected="buttonSelected(11);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=6 v-on:selected="buttonSelected(6);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=7 v-on:selected="buttonSelected(7);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=8 v-on:selected="buttonSelected(8);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=9 v-on:selected="buttonSelected(9);" :config="config" :buttSelected="button"></deckButton>
         <deckButton id=10 v-on:selected="buttonSelected(10);" :config="config" :buttSelected="button"></deckButton>
+      </div>
+      <div class="deckButtonRow">
+        <deckButton id=11 v-on:selected="buttonSelected(11);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=12 v-on:selected="buttonSelected(12);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=13 v-on:selected="buttonSelected(13);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=14 v-on:selected="buttonSelected(14);" :config="config" :buttSelected="button"></deckButton>
+        <deckButton id=15 v-on:selected="buttonSelected(15);" :config="config" :buttSelected="button"></deckButton>
       </div>
   </div>
   <hr />
@@ -64,10 +64,11 @@
 
       <br />
 
-      <button class="btn btn-primary" v-on:click="clearImage();">Clear Image</button>
-      <button class="btn btn-primary" v-on:click="setFillColor(255, 0, 0);">Red</button>
-      <button class="btn btn-primary" v-on:click="setFillColor(0, 255, 0);">Green</button>
-      <button class="btn btn-primary" v-on:click="setFillColor(0, 0, 255);">Blue</button>
+      <button class="btn btn-primary" v-on:click="setFillColor('0x000000');">Clear Image</button>
+      <button class="btn btn-primary" v-on:click="setFillColor('0xFF0000');">Red</button>
+      <button class="btn btn-primary" v-on:click="setFillColor('0x00FF00');">Green</button>
+      <button class="btn btn-primary" v-on:click="setFillColor('0x0000FF');">Blue</button>
+      <button class="btn btn-primary" v-on:click="setFillColor('0xFFFFFF');">White</button>
 
       <button class="btn btn-primary" v-on:click="pickImage();">Pick Image</button>
 
@@ -81,7 +82,7 @@
   const {ipcRenderer} = require('electron')
 
   var conf = [{}]
-  for (var i = 0; i < 15; i++) {
+  for (var i = 0; i < 16; i++) {
     conf[i] = {
       pressed: false,
       mode: 'OSC',
@@ -99,8 +100,8 @@
     components: { deckButton },
     data: function () {
       return {
-        button: 0,
-        current: conf[0],
+        button: 1,
+        current: conf[1],
         config: conf
       }
     },
@@ -123,11 +124,8 @@
         this.$electron.ipcRenderer.send('setConfig', this.config)
         // console.log('Sending config to main')
       },
-      clearImage () {
-        this.$electron.ipcRenderer.send('clearImage', this.button)
-      },
-      setFillColor (r, g, b) {
-        this.$electron.ipcRenderer.send('setFillColor', {'button': this.button, 'r': r, 'g': g, 'b': b})
+      setFillColor (color) {
+        this.$electron.ipcRenderer.send('setFillColor', {button: this.button, color: color})
       },
       pickImage () {
         this.$electron.ipcRenderer.send('pickImage', {button: this.button})
