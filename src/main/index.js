@@ -7,32 +7,67 @@ const Store = require('electron-store')
 const store = new Store()
 store.delete('config')
 
-const streamDeckApi = require('stream-deck-api')
-var streamDeck = streamDeckApi.getStreamDeck()
-
 var osc = require('node-osc')
 
-streamDeck.setBrightness(100)
+const streamDeckApi = require('stream-deck-api')
+var streamDeck = streamDeckApi.getStreamDeck()
+var streamDeckOnline = false
 
-streamDeck.on('down', (keyIndex) => {
-  config[keyIndex]['pressed'] = true
-  sendConfigToWebview()
+// Once app is ready, check for streamdeck and bind stuff to it.
+app.on('ready', function () {
+  // checkForStreamdeck()
+  setInterval(checkForStreamdeck, 1000)
+})
 
-  var key = config[keyIndex]
-
-  if (key.mode === 'OSC') {
-    var client = new osc.Client(key.osc.ip, key.osc.port)
-    client.send(key.osc.msg, key.osc.args, function () {
-      client.kill()
-    })
-    console.log('Sent OSC Message: ' + key.osc.msg + ' - to: ' + key.osc.ip + ' - on port: ' + key.osc.port + ' - with args: ' + key.osc.args)
+// This checks for a streamdeck and sets it up if online.
+function checkForStreamdeck () {
+  if (streamDeck === undefined) {
+    console.log('StreamDeck Offline - trying to connect')
+    mainWindow.webContents.send('setOnline', false)
+    streamDeck = streamDeckApi.getStreamDeck()
+  } else {
+    if (!streamDeckOnline) {
+      console.log('StreamDeck Now Online!')
+      mainWindow.webContents.send('setOnline', true)
+      setupStreamDeck()
+    }
   }
-})
+}
 
-streamDeck.on('up', (keyIndex) => {
-  config[keyIndex].pressed = false
-  sendConfigToWebview()
-})
+function setupStreamDeck () {
+  if (streamDeck !== undefined) {
+    streamDeckOnline = true
+    streamDeck.setBrightness(100)
+
+    streamDeck.on('down', (keyIndex) => {
+      config[keyIndex]['pressed'] = true
+      sendConfigToWebview()
+
+      var key = config[keyIndex]
+
+      if (key.mode === 'OSC') {
+        var client = new osc.Client(key.osc.ip, key.osc.port)
+        client.send(key.osc.msg, key.osc.args, function () {
+          client.kill()
+        })
+        console.log('Sent OSC Message: ' + key.osc.msg + ' - to: ' + key.osc.ip + ' - on port: ' + key.osc.port + ' - with args: ' + key.osc.args)
+      }
+
+      if (key.mode === 'QLab' && key.qlab.type === 'system') {
+        var qlabClient = new osc.Client('127.0.0.1', '53000')
+        qlabClient.send(key.qlab.system, '', function () {
+          qlabClient.kill()
+        })
+        console.log('QLab System Press: ' + key.qlab.system)
+      }
+    })
+
+    streamDeck.on('up', (keyIndex) => {
+      config[keyIndex].pressed = false
+      sendConfigToWebview()
+    })
+  }
+}
 
 var config = []
 /**
@@ -62,23 +97,27 @@ function createWindow () {
     mainWindow = null
   })
 
-  if (store.has('config')) {
-    config = store.get('config')
-    console.log('Config loaded from store')
-  } else {
-    for (var i = 0; i < 16; i++) {
-      config[i] = {
-        pressed: false,
-        mode: 'OSC',
-        osc: {
-          ip: '127.0.0.1',
-          port: '53000',
-          args: '',
-          msg: '/cue/' + i + '/start'
-        }
+  // if (!store.has('config')) {
+  //   config = store.get('config')
+  //   console.log('Config loaded from store')
+  // } else {
+  console.log('Default Config loaded')
+  for (var i = 0; i < 16; i++) {
+    config[i] = {
+      pressed: false,
+      mode: 'OSC',
+      osc: {
+        ip: '127.0.0.1',
+        port: '53000',
+        args: '',
+        msg: '/cue/' + i + '/start'
+      },
+      qlab: {
+        type: 'Cue'
       }
     }
   }
+  // }
 
   sendConfigToWebview()
 }
@@ -110,15 +149,17 @@ ipcMain.on('getConfig', (event, arg) => {
 
 ipcMain.on('setFillColor', (event, arg) => {
   console.log(arg)
-  // console.log('Set fill color for button: ' + arg['button'])
-  streamDeck.drawColor(parseInt(arg.color), parseInt(arg.button))
+  if (streamDeck !== undefined) {
+    streamDeck.drawColor(parseInt(arg.color), parseInt(arg.button))
+  }
 })
 
 ipcMain.on('pickImage', (event, arg) => {
-  var file = dialog.showOpenDialog({title: 'Select Image', properties: ['openFile'], filters: [{name: 'Images', extensions: ['jpg', 'png']}]})
-  console.log('File picked for button ' + arg.button + ' - ' + file)
-
-  streamDeck.drawImageFileWithText(String(file), parseInt(arg.button), 'Hello')
+  if (streamDeck !== undefined) {
+    var file = dialog.showOpenDialog({title: 'Select Image', properties: ['openFile'], filters: [{name: 'Images', extensions: ['jpg', 'png']}]})
+    console.log('File picked for button ' + arg.button + ' - ' + file)
+    streamDeck.drawImageFileWithText(String(file), parseInt(arg.button), 'Hello')
+  }
 })
 
 function sendConfigToWebview () {
@@ -127,12 +168,26 @@ function sendConfigToWebview () {
 
 process.on('unhandledRejection', (reason, p) => {
   console.log('EEK! Unhandled Rejection at: Promise', p, 'reason:', reason)
-  // application specific logging, throwing an error, or other logic here
+})
+process.on('uncaughtException', err => {
+  console.error(err)
+  app.quit()
 })
 
 // --
 // OSC Server
 var oscServer = new osc.Server(4242, '0.0.0.0')
 oscServer.on('message', function (msg, rinfo) {
-  console.log('OSC message:' + msg)
+  console.log('Incoming OSC message:' + msg)
+  // console.log(msg)
+  var addr = msg[0].split('/')
+  // console.log(addr)
+  if (addr[1] === 'button' && addr[3] === 'color' && streamDeck !== undefined) {
+    streamDeck.drawColor(parseInt('0x' + msg[1]), parseInt(addr[2]))
+  }
+})
+
+var qlabReplies = new osc.Server(53001, '0.0.0.0')
+qlabReplies.on('message', function (msg, rinfo) {
+  console.log('QLab Reply:' + msg)
 })

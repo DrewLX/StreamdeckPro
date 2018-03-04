@@ -1,7 +1,7 @@
 {
   "name": "streamdeck-pro",
-  "version": "0.0.0",
-  "author": "Drew Perry <drew@event.engineering>",
+  "version": "0.1.0",
+  "author": "Drew Perry <me@drewperry.co.uk>",
   "description": "Streamdeck software designed for media professionals. Interface with other apps using OSC and MIDI",
   "license": null,
   "main": "./dist/electron/main.js",

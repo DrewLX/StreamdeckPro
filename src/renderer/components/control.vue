@@ -2,6 +2,8 @@
   <div id="controlPage">
     <div id="streamdeck" class="row">
       <div class="streamdeckLogo">STREAM DECK</div>
+      <div class="online" v-if="online">ONLINE</div>
+      <div class="offline" v-if="!online">OFFLINE</div>
       <div class="deckButtonRow">
         <deckButton id=1 v-on:selected="buttonSelected(1);" :config="config" :buttSelected="button"></deckButton>
         <deckButton id=2 v-on:selected="buttonSelected(2);" :config="config" :buttSelected="button"></deckButton>
@@ -57,12 +59,37 @@
         </div>
       </div>
 
-      <div v-if="current.mode == 'MIDI'">
-        Like, so totally not implemented yet.
-        {{ config }}
+
+      <div v-if="current.mode == 'QLab'">
+        <label>QLab Button Type:</label>
+        <select v-model="current.qlab.type">
+          <option value="system">System</option>
+          <option value="cue">Cue</option>
+        </select>
+
+        <div v-if="current.qlab.type == 'cue'">
+          <div class="input-group" style="margin-top: 10px;">
+            <span class="input-group-addon" id="basic-addon1">Cue Number</span>
+            <input type="text" class="form-control" v-model="current.qlab.cue">
+          </div>
+        </div>
+        <br /><br />
+        <div v-if="current.qlab.type == 'system'">
+          <label>System Function: </label>
+          <select v-model="current.qlab.system">
+            <option value="/go">Go</option>
+            <option value="/panic">Panic</option>
+            <option value="/playhead/next">Playhead Next</option>
+            <option value="/playhead/prev">Playhead Previous</option>
+          </select>
+        </div>
       </div>
 
-      <br />
+      <div v-if="current.mode == 'MIDI'">
+        Not implemented yet. Soz.
+      </div>
+
+      <hr />
 
       <button class="btn btn-primary" v-on:click="setFillColor('0x000000');">Clear Image</button>
       <button class="btn btn-primary" v-on:click="setFillColor('0xFF0000');">Red</button>
@@ -91,6 +118,11 @@
         port: '53000',
         args: '',
         msg: '/cue/' + i + '/start'
+      },
+      qlab: {
+        type: 'system',
+        cue: i,
+        system: '/go'
       }
     }
   }
@@ -102,7 +134,8 @@
       return {
         button: 1,
         current: conf[1],
-        config: conf
+        config: conf,
+        online: false
       }
     },
     watch: {
@@ -135,7 +168,9 @@
       ipcRenderer.on('updateConfig', (event, arg) => {
         this.config = arg
         this.current = arg[this.button]
-        // console.log('Config updated from main js')
+      })
+      ipcRenderer.on('setOnline', (event, arg) => {
+        this.online = arg
       })
 
       ipcRenderer.send('getConfig', {})
@@ -169,8 +204,26 @@ body {
 
 .streamdeckLogo {
   color: #ccc;
-  text-align: center;
+  width: 300px;
+  padding-left: 15px;
   font-weight: bold;
+  float: left;
 }
 
+.online {
+  width: 250px;
+  float: right;
+  padding-right: 15px;
+  color: #29b40d;
+  font-weight: bold;
+  text-align: right;
+}
+.offline {
+  width: 250px;
+  float: right;
+  padding-right: 15px;
+  color: #d20909;
+  font-weight: bold;
+  text-align: right;
+}
 </style>
