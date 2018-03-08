@@ -17,7 +17,7 @@ title: Streamdeck Pro
 email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   A simple app for the Elgato StreamDeck designed to allow media professionals to use other software/protocols with the StreamDeck.
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "StreamdeckPro/" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: DrewLX
 github_username:  DrewLX
