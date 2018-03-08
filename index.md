@@ -5,123 +5,34 @@
 layout: default
 ---
 
+# Beta Release
 
-Text can be **bold**, _italic_, or ~~strikethrough~~.
+I'm still very much actively developing this app, and after a couple of months I've got something that is reasonably stable and tested by a few people. That does **not** mean it won't crash! It's very much a beta.
 
-[Link to another page](another-page).
+[Download Here](https://github.com/DrewLX/StreamdeckPro/releases)
 
-There should be whitespace between paragraphs.
+## How to use it
 
-There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.
+1. Download the .zip file above and copy the app into your Applications folder
+2. Simply quit the official Streamdeck application, probably in your menu bar.
+3. Run StreamDeckPro from your Applications folder.
 
-# [](#header-1)Header 1
+The usage should be pretty obvious if you are familiar with OSC. Click on a button to edit, configure what it does when you press it. There is no save, all changes are saved as you make them. Pressing a button will send the OSC.
 
-This is a normal paragraph following a header. GitHub is a code hosting platform for version control and collaboration. It lets you and others work together on projects from anywhere.
+The defaults are intentionally set to localhost (127.0.0.1) with port 53000 as this is used by QLab.
 
-## [](#header-2)Header 2
+## My roadmap
 
-> This is a blockquote following a header.
->
-> When something is important enough, you do it even if the odds are not in your favor.
+While this app is currently functional, my plan is to put some work into some core features that will allow for a much more powerful controller.
 
-### [](#header-3)Header 3
+* Write a button image management system, that would consist of a background, foreground and then a text layer. These could be each dynamically updated. For example the background colour could indicate a QLab's cue state (play, loaded, stopped) and the text could be the Cue's name, and another text layer for time remaining.
 
-```js
-// Javascript code with syntax highlighting.
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
-}
-```
+* Better integrate with QLab system functions. Such as Go, Next, Previous. You can do this now by setting the cue to /go but a simpler way of selecting these will speed things up.
 
-```ruby
-# Ruby code with syntax highlighting
-GitHubPages::Dependencies.gems.each do |gem, version|
-  s.add_dependency(gem, "= #{version}")
-end
-```
+* Add support for MIDI. Not all applications support OSC, so adding MIDI will suit some users.
 
-#### [](#header-4)Header 4
+* Export/Import of configuration files.
 
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
+## Contact Me
 
-##### [](#header-5)Header 5
-
-1.  This is an ordered list following a header.
-2.  This is an ordered list following a header.
-3.  This is an ordered list following a header.
-
-###### [](#header-6)Header 6
-
-| head1        | head two          | three |
-|:-------------|:------------------|:------|
-| ok           | good swedish fish | nice  |
-| out of stock | good and plenty   | nice  |
-| ok           | good `oreos`      | hmm   |
-| ok           | good `zoute` drop | yumm  |
-
-### There's a horizontal rule below this.
-
-* * *
-
-### Here is an unordered list:
-
-*   Item foo
-*   Item bar
-*   Item baz
-*   Item zip
-
-### And an ordered list:
-
-1.  Item one
-1.  Item two
-1.  Item three
-1.  Item four
-
-### And a nested list:
-
-- level 1 item
-  - level 2 item
-  - level 2 item
-    - level 3 item
-    - level 3 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-
-### Small image
-
-![](https://assets-cdn.github.com/images/icons/emoji/octocat.png)
-
-### Large image
-
-![](https://guides.github.com/activities/hello-world/branching.png)
-
-
-### Definition lists can be used with HTML syntax.
-
-<dl>
-<dt>Name</dt>
-<dd>Godzilla</dd>
-<dt>Born</dt>
-<dd>1952</dd>
-<dt>Birthplace</dt>
-<dd>Japan</dd>
-<dt>Color</dt>
-<dd>Green</dd>
-</dl>
-
-```
-Long, single-line code blocks should not wrap. They should horizontally scroll if they are too long. This line should be long enough to demonstrate this.
-```
-
-```
-The final element.
-```
+If you have any bugs, suggestions or requests, feel free to email me: me@drewperry.co.uk or tweet me: DrewLX.
