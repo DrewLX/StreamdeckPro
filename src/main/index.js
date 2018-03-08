@@ -179,9 +179,8 @@ process.on('uncaughtException', err => {
 var oscServer = new osc.Server(4242, '0.0.0.0')
 oscServer.on('message', function (msg, rinfo) {
   console.log('Incoming OSC message:' + msg)
-  // console.log(msg)
   var addr = msg[0].split('/')
-  // console.log(addr)
+
   if (addr[1] === 'button' && addr[3] === 'color' && streamDeck !== undefined) {
     streamDeck.drawColor(parseInt('0x' + msg[1]), parseInt(addr[2]))
   }
