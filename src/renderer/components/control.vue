@@ -1,7 +1,7 @@
 <template>
   <div id="controlPage">
     <div id="streamdeck" class="row">
-      <div class="streamdeckLogo">STREAM DECK</div>
+      <div class="streamdeckLogo">STREAMDECK PRO</div>
       <div class="online" v-if="online">ONLINE</div>
       <div class="offline" v-if="!online">OFFLINE</div>
       <div class="deckButtonRow">
@@ -195,6 +195,8 @@ body {
   margin: auto;
   margin-top: 20px;
   background: -webkit-radial-gradient(center, ellipse cover, rgba(75,75,75,1) 0%,rgba(25,25,25,1) 100%);
+  user-select: none;
+  cursor: default;
 }
 
 .deckButtonRow {
