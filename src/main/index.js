@@ -7,7 +7,18 @@ const Store = require('electron-store')
 const store = new Store()
 store.delete('config')
 
+var EventMaster = require('barco-eventmaster')
+// Change this ip to your own E2/S3 IP
+var e2 = new EventMaster('192.168.0.175')
+
 var osc = require('node-osc')
+
+// var midi = require('midi')
+// var midiOutput = new midi.output()
+// midiOutput.openVirtualPort('StreamDeck Pro')
+
+// console.log('Midi port count: ' + midiOutput.getPortCount())
+// console.log('Midi port name: ' + midiOutput.getPortName(0))
 
 const streamDeckApi = require('stream-deck-api')
 var streamDeck = streamDeckApi.getStreamDeck()
@@ -22,7 +33,7 @@ app.on('ready', function () {
 // This checks for a streamdeck and sets it up if online.
 function checkForStreamdeck () {
   if (streamDeck === undefined) {
-    console.log('StreamDeck Offline - trying to connect')
+    // console.log('StreamDeck Offline - trying to connect')
     mainWindow.webContents.send('setOnline', false)
     streamDeck = streamDeckApi.getStreamDeck()
   } else {
@@ -44,6 +55,16 @@ function setupStreamDeck () {
       sendConfigToWebview()
 
       var key = config[keyIndex]
+
+      if (key.mode === 'E2') {
+        if (key.e2.type === 'allTrans') {
+          e2.allTrans()
+        } else if (key.e2.type === 'cut') {
+          e2.cut()
+        } else if (key.e2.type === 'preset') {
+          e2.activatePresetByName(key.e2.preset, 0, null)
+        }
+      }
 
       if (key.mode === 'OSC') {
         var client = new osc.Client(key.osc.ip, key.osc.port)
@@ -97,27 +118,33 @@ function createWindow () {
     mainWindow = null
   })
 
-  // if (!store.has('config')) {
-  //   config = store.get('config')
-  //   console.log('Config loaded from store')
-  // } else {
-  console.log('Default Config loaded')
-  for (var i = 0; i < 16; i++) {
-    config[i] = {
-      pressed: false,
-      mode: 'OSC',
-      osc: {
-        ip: '127.0.0.1',
-        port: '53000',
-        args: '',
-        msg: '/cue/' + i + '/start'
-      },
-      qlab: {
-        type: 'Cue'
+  if (!store.has('config')) {
+    config = store.get('config')
+    console.log('Config loaded from store')
+  } else {
+    console.log('Default Config loaded')
+    for (var i = 0; i < 16; i++) {
+      config[i] = {
+        pressed: false,
+        mode: 'OSC',
+        osc: {
+          ip: '127.0.0.1',
+          port: '53000',
+          args: '',
+          msg: '/cue/' + i + '/start'
+        },
+        e2: {
+          type: 'allTrans',
+          preset: '1'
+        },
+        qlab: {
+          type: 'system',
+          cue: i,
+          system: '/go'
+        }
       }
     }
   }
-  // }
 
   sendConfigToWebview()
 }

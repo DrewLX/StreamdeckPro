@@ -36,6 +36,7 @@
       <select v-model="current.mode">
         <option>OSC</option>
         <option>MIDI</option>
+        <option>E2</option>
       </select>
 
       <br /><br />
@@ -89,6 +90,22 @@
         Not implemented yet. Soz.
       </div>
 
+      <div v-if="current.mode == 'E2'">
+        <label>E2 Button Type:</label>
+        <select v-model="current.e2.type">
+          <option value="allTrans">AllTrans</option>
+          <option value="cut">Cut</option>
+          <option value="preset">Preset To Preview</option>
+        </select>
+
+        <div v-if="current.e2.type == 'preset'">
+          <div class="input-group" style="margin-top: 10px;">
+            <span class="input-group-addon" id="basic-addon1">Preset ID</span>
+            <input type="text" class="form-control" v-model="current.e2.preset">
+          </div>
+        </div>
+      </div>
+
       <hr />
 
       <button class="btn btn-primary" v-on:click="setFillColor('0x000000');">Clear Image</button>
@@ -118,6 +135,10 @@
         port: '53000',
         args: '',
         msg: '/cue/' + i + '/start'
+      },
+      e2: {
+        type: 'allTrans',
+        preset: '1'
       },
       qlab: {
         type: 'system',
